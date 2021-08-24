@@ -1,0 +1,87 @@
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+
+//Definindo constantes com os dados da rede wifi
+const char* ssid = "AnaLaura";
+const char* senha = "astres07";
+
+ESP8266WebServer server(80); //Informa que a porta 80 será utilizada para o web server
+
+const int led = 2; //Define o valor do pino conectado ao led
+
+//Função para mostrar página com dados do potenciometro no navegador
+void handleRoot() {
+  digitalWrite(led, 1); //Liga o led (Início da comunicação com o server)
+
+  String textoHTML;
+  
+  String botao = digitalRead(4)? "Ligado" : "Desligado";
+
+  textoHTML += "Botao: ";
+  textoHTML += botao;
+
+   
+  server.send(200, "text/html", textoHTML); //Envia a string como um texto html, utilizando o código HTTP 200 (OK)
+  digitalWrite(led, 0); //Desliga o led (Fim da comunicação)
+}
+
+//Função para mostrar página de erro (NotFound)
+void handleNotFound(){
+  digitalWrite(led, 1);
+  
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET)?"GET":"POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i=0; i<server.args(); i++){
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  
+  server.send(404, "text/plain", message); //Envia a mensagem a ser mostrar como um texto plain, utilizando código 404 (Not Found)
+  digitalWrite(led, 0);
+}
+
+void setup(void){
+  pinMode(led, OUTPUT); //Define o pino do led para envio de sinais
+  digitalWrite(led, 0);
+  
+  Serial.begin(115200); //Inicia comunicação serial
+  WiFi.mode(WIFI_STA); //Define a esp8266 no modo Station
+  
+  WiFi.begin(ssid, senha); //Inicia conexão com a rede wifi
+  Serial.println("");
+
+  // Espera pela conexão
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  //Inicializa mDNS
+  if (MDNS.begin("esp8266")) {
+    Serial.println("MDNS responder started");
+  }
+
+  server.on("/", handleRoot); //Define ação handleRoot para a URL principal
+
+  server.onNotFound(handleNotFound); //Define ação handleNotFound para erro NotFound
+  
+  server.begin(); //Inicia o servidor
+  Serial.println("HTTP server started");
+}
+
+void loop(void){
+  server.handleClient(); //Faz o servidor continuar esperando requisições do cliente
+}
