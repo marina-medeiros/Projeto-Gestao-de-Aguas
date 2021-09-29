@@ -1,0 +1,19 @@
+body{
+    display:flex; /* Deixa as divs filhas uma do lado da outra*/
+    justify-content: left; /* Só funciona c display:flex*/
+}
+h1{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: black;
+    text-align: left;
+}
+h2{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: black;
+    text-align: left;
+}
+svg{
+    margin-top: -80px;
+}
